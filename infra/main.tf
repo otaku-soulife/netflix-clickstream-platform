@@ -39,6 +39,12 @@ locals {
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
+
+  tags = {
+    project     = "netflix-clickstream"
+    environment = "dev"
+    managed_by  = "terraform"
+  }
 }
 
 # ---------------- ADLS Gen2 (lakehouse storage) ----------------
