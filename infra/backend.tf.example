@@ -1,0 +1,13 @@
+# Remote state (enterprise practice): Terraform state lives in Azure Storage,
+# shared and locked, instead of a local terraform.tfstate file on your laptop.
+#
+# Bootstrap the state storage account ONCE (see docs/SETUP-GITHUB.md), then
+# rename this file to backend.tf and run `terraform init -migrate-state`.
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-tfstate"
+    storage_account_name = "sttfstateCHANGEME" # must be globally unique
+    container_name       = "tfstate"
+    key                  = "netflix-clickstream.tfstate"
+  }
+}

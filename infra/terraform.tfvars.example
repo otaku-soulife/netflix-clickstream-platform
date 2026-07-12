@@ -1,0 +1,3 @@
+# Copy to terraform.tfvars and edit if you want different values.
+resource_group_name = "rg-netflix-clickstream"
+location            = "eastus"
