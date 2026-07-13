@@ -3,10 +3,8 @@ name: terraform
 # Runs on PRs (plan only) and on merge to main (apply).
 on:
   pull_request:
-    paths: ["infra/**"]
   push:
     branches: [main]
-    paths: ["infra/**"]
 
 # OIDC federation to Azure - GitHub gets a short-lived token, no stored password.
 permissions:
