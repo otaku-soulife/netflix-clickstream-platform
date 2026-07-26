@@ -27,6 +27,7 @@ Branch name prefixes: `feat/`, `fix/`, `infra/`, `pipeline/`, `ml/`, `docs/`, `c
 
 ```powershell
 git status                   # what's modified / staged
+git status -s                # which files have changed.
 git diff                     # exact line changes (not yet staged)
 ```
 
