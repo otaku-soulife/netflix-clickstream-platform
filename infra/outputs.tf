@@ -31,3 +31,11 @@ output "key_vault_uri" {
 output "uc_access_connector_id" {
   value = azurerm_databricks_access_connector.uc.id
 }
+
+output "acr_login_server" {
+  value = azurerm_container_registry.acr.login_server
+}
+
+output "acr_name" {
+  value = azurerm_container_registry.acr.name
+}
