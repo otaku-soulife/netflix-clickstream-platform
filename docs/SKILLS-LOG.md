@@ -123,3 +123,54 @@ Updated through: Phase 2 (event producer).
 - Phase 4: Delta Live Tables, medallion architecture, data-quality expectations.
 - Phase 5: Databricks Asset Bundles + CI deploy.
 - Phase 6: MLflow, feature engineering, model registry, batch scoring, monitoring.
+
+## Containerization & Image Delivery (Phase 2, cont.)
+
+### Containerization (Docker)
+- **Technical:** Authored a Dockerfile - pinned Python base, layered dependency
+  install for build caching, non-root runtime user, defined entrypoint -
+  producing an immutable, host-independent image.
+- **Plain:** Packed the app and everything it needs into one sealed shipping
+  container that runs the same anywhere.
+- **Why it hires you:** Containers are the universal unit of ML deployment
+  (training jobs, inference services, data producers). Writing a clean
+  Dockerfile is a baseline expectation.
+
+### Private container registry (Azure Container Registry)
+- **Technical:** Provisioned ACR as code (Terraform) and published versioned,
+  tagged images with identity-based access instead of admin passwords.
+- **Plain:** Set up a private, secure, version-labeled warehouse for the
+  containers.
+- **Why it hires you:** Registries make every deploy traceable to an exact
+  build - core to reproducible, auditable ML delivery.
+
+### Build & publish images in CI (GitHub Actions)
+- **Technical:** Workflow builds the image on every PR (validates the Dockerfile)
+  and builds+pushes a tagged image to ACR on merge to main, authenticating via
+  OIDC (no stored credentials).
+- **Plain:** A robot assembly line test-builds the container on a proposal and
+  files the final version in the warehouse on approval - hands-off.
+- **Why it hires you:** This is the heart of MLOps - the same pipeline that
+  ships a container ships a packaged model. Employers look for "can automate
+  the build/deploy of ML artifacts."
+
+### Troubleshooting a platform constraint
+- **Technical:** Hit `TasksOperationsNotAllowed` (ACR Tasks disabled on the free
+  tier) and pivoted from cloud-side build to a CI-runner build - same outcome,
+  different mechanism.
+- **Plain:** A blocked tool didn't stop the work; found an equally good route.
+- **Why it hires you:** Real infra is full of quotas and disabled features;
+  diagnosing and routing around them is what separates tutorial-followers from
+  engineers who ship in messy environments.
+
+### New resume bullets
+- Containerized a Python streaming service with Docker (non-root, cache-optimized).
+- Automated container image build/publish to Azure Container Registry via GitHub
+  Actions with OIDC auth.
+- Diagnosed and worked around a free-tier ACR Tasks restriction by moving the
+  build to CI runners.
+
+### New interview talking points
+- Why containers guarantee "runs the same everywhere."
+- Why building images in CI (vs by hand) is central to MLOps.
+- The free-tier ACR Tasks limitation and how you routed around it.
