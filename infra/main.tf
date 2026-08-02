@@ -143,3 +143,12 @@ resource "azurerm_role_assignment" "uc_storage" {
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_databricks_access_connector.uc.identity[0].principal_id
 }
+
+# ---------------- Azure Container Registry (stores the producer image) ----------------
+resource "azurerm_container_registry" "acr" {
+  name                = "acrnetflix${local.suffix}" # must be globally unique, alphanumeric
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  sku                 = "Basic"
+  admin_enabled       = false # we'll use identity-based pulls, not admin passwords
+}
