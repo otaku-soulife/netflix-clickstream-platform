@@ -1,0 +1,48 @@
+name: producer-image
+
+# Builds the producer container image.
+#  - On a PR that touches producer/: build only (validates the Dockerfile).
+#  - On merge to main: build AND push the image to Azure Container Registry.
+on:
+  pull_request:
+    paths: ["producer/**"]
+  push:
+    branches: [main]
+    paths: ["producer/**"]
+  workflow_dispatch: {}   # lets you run it manually from the Actions tab
+
+permissions:
+  id-token: write   # OIDC login to Azure
+  contents: read
+
+env:
+  ACR_NAME: acrnetflixrg8vkj
+  IMAGE: netflix-clickstream-producer
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build image (validates the Dockerfile)
+        run: docker build -t ${{ env.IMAGE }}:ci ./producer
+
+      # Only publish after merge to main.
+      - name: Push to ACR
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          az acr login --name "$ACR_NAME"
+          REG="$ACR_NAME.azurecr.io/$IMAGE"
+          docker tag "$IMAGE:ci" "$REG:latest"
+          docker tag "$IMAGE:ci" "$REG:${GITHUB_SHA::7}"
+          docker push "$REG:latest"
+          docker push "$REG:${GITHUB_SHA::7}"
+          echo "Pushed $REG:latest and $REG:${GITHUB_SHA::7}"
