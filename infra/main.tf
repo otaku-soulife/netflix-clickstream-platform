@@ -152,3 +152,55 @@ resource "azurerm_container_registry" "acr" {
   sku                 = "Basic"
   admin_enabled       = false # we'll use identity-based pulls, not admin passwords
 }
+
+# ---------------- Producer running on Azure Container Instances ----------------
+# Identity the container uses to pull its image from ACR
+resource "azurerm_user_assigned_identity" "producer" {
+  name                = "id-producer"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+}
+
+resource "azurerm_role_assignment" "producer_acrpull" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_user_assigned_identity.producer.principal_id
+}
+
+resource "azurerm_container_group" "producer" {
+  name                = "aci-producer"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  os_type             = "Linux"
+  restart_policy      = "Always"
+  ip_address_type     = "None" # background worker, no inbound traffic
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.producer.id]
+  }
+
+  image_registry_credential {
+    server                    = azurerm_container_registry.acr.login_server
+    user_assigned_identity_id = azurerm_user_assigned_identity.producer.id
+  }
+
+  container {
+    name   = "producer"
+    image  = "${azurerm_container_registry.acr.login_server}/netflix-clickstream-producer:latest"
+    cpu    = "0.5"
+    memory = "1.0"
+
+    # Secret: reused straight from the Event Hubs rule Terraform already manages
+    secure_environment_variables = {
+      EVENTHUB_CONNECTION_STRING = azurerm_eventhub_authorization_rule.producer.primary_connection_string
+    }
+    environment_variables = {
+      EVENTS_PER_SECOND = "5"
+      NUM_CUSTOMERS     = "500"
+    }
+  }
+
+  # ensure the pull permission exists before the container tries to pull
+  depends_on = [azurerm_role_assignment.producer_acrpull]
+}
